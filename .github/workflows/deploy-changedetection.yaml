@@ -85,6 +85,8 @@ jobs:
           fi
           echo "BASE: $REF_BASE"
           bash scripts/deploy-changedetection.sh -r $REF_BASE -d
+          echo test=moo >> $GITHUB_ENV
+          echo test2=moo >> "$GITHUB_OUTPUT"
           
           {
             echo "### Workflow variables"
@@ -92,6 +94,8 @@ jobs:
             echo "| ---------- | ----------- |"
             echo "| DEPLOY_API  | $DEPLOY_API  |"
             echo "| DEPLOY_WEB | $DEPLOY_WEB |"
+            echo "| test  | $test  |"
+            echo "| test2 | $test2 |"
           } >> $GITHUB_STEP_SUMMARY
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
