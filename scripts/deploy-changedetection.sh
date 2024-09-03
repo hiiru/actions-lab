@@ -110,11 +110,11 @@ if [[ $DEPLOY_API -eq 0 ]] && [[ DEPLOY_WEB -eq 0 ]]; then
     fi
 fi
 
-if [ -z ${GIT_REFERENCE+x} ];
+if [ -z ${OUTPUT_FILE+x} ];
 then
   echo "DEPLOY_API=$DEPLOY_API"
   echo "DEPLOY_WEB=$DEPLOY_WEB"
 else
-  echo "DEPLOY_API=$DEPLOY_API" >> $OUTPUT_FILE
-  echo "DEPLOY_WEB=$DEPLOY_WEB" >> $OUTPUT_FILE
+  echo "DEPLOY_API=$DEPLOY_API" >> "$OUTPUT_FILE"
+  echo "DEPLOY_WEB=$DEPLOY_WEB" >> "$OUTPUT_FILE"
 fi
