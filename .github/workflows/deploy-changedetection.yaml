@@ -111,7 +111,7 @@ jobs:
 
   deploy-staging-web:
     needs: [ deploy-staging, deploy-staging-api ]
-    if: needs.deploy-staging.outputs.deploy-web == 1
+    if: always() && needs.deploy-staging.outputs.deploy-web == 1
     runs-on: ubuntu-latest
     environment: Staging
     steps:

@@ -151,6 +151,7 @@ else
   if [ ! -z "$GITHUB_STEP_SUMMARY" ];
   then
     {
+      echo "### output variables"
       echo "| Variable   | Value       |"
       echo "| ---------- | ----------- |"
       echo "| DEPLOY_API  | $DEPLOY_API  |"
