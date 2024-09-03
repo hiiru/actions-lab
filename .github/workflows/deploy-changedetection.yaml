@@ -103,6 +103,8 @@ jobs:
           echo "DEPLOY_API: ${{ steps.check.outputs.deploy_api }}"
           echo "DEPLOY_WEB: ${{ steps.check.outputs.deploy_web }}"
 
+      - run: echo '${{ toJSON(steps) }}'
+
 
   deploy-staging:
     needs: [ deploy-check ]
@@ -114,8 +116,10 @@ jobs:
 
       - run: |
           echo "outputs:"
-          echo "${{ needs.deploy-check.outputs.DEPLOY_API }}"
-          echo "${{ needs.deploy-check.outputs.DEPLOY_WEB }}"
+          echo "${{ needs.deploy-check.outputs.output1 }}"
+          echo "${{ needs.deploy-check.outputs.output2 }}"
+          echo "${{ needs.deploy-check.outputs.deploy-api }}"
+          echo "${{ needs.deploy-check.outputs.deploy-web }}"
 
 #
 #  deploy-staging-api:
