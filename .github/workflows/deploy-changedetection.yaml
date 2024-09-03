@@ -29,21 +29,15 @@ jobs:
     permissions:
       actions: read
       contents: read
-    env:
-      GITHUB_CONTEXT: ${{ toJson(github) }}
     outputs:
       deploy-api: ${{ steps.check.outputs.deploy_api }}
       deploy-web: ${{ steps.check.outputs.deploy_web }}
     steps:
       - run: |
-          echo "change check to check what needs to be deployed"
-
-      - run: |
           dotnet tool install dotnet-affected -g
 
       - uses: actions/checkout@v4
         with:
-          # We need to fetch all branches and commits so that Nx affected has a base to compare against.
           fetch-depth: 0
 
       - id: check
@@ -92,6 +86,7 @@ jobs:
 
   deploy-staging:
     needs: [ deploy-check ]
+    if: needs.deploy-check.outputs.deploy-api == 1 || needs.deploy-check.outputs.deploy-web == 1
     outputs:
       deploy-api: ${{ needs.deploy-check.outputs.deploy-api }}
       deploy-web: ${{ needs.deploy-check.outputs.deploy-web }}
@@ -124,30 +119,35 @@ jobs:
           echo "Staging WEB deployed"
           echo '${{ toJSON(needs) }}'
 
-#  deploy-production:
-#    needs: [ deploy-check ]
-#    # workaround for manual deployment on free plan (no approval)
-#    if: ${{ github.run_attempt > 1 }}
-#    runs-on: ubuntu-latest
-#    environment: Production
-#    steps:
-#      - run: |
-#          echo "Production deployment"
-#
-#  deploy-production-api:
-#    if: false
-#    needs: [ deploy-production ]
-#    runs-on: ubuntu-latest
-#    environment: Staging
-#    steps:
-#      - run: |
-#          echo "Production API deployed"
-#
-#  deploy-production-web:
-#    needs: [ deploy-production, deploy-production-api ]
-#    if: false
-#    runs-on: ubuntu-latest
-#    environment: Staging
-#    steps:
-#      - run: |
-#          echo "Production WEB deployed"
+  deploy-production:
+    needs: [ deploy-check ]
+    # workaround for manual deployment on free plan (no approval)
+    if: ${{ github.run_attempt > 1 && (needs.deploy-check.outputs.deploy-api == 1 || needs.deploy-check.outputs.deploy-web == 1) }}
+    #if: ${{ github.run_attempt > 1 }}
+    outputs:
+      deploy-api: ${{ needs.deploy-check.outputs.deploy-api }}
+      deploy-web: ${{ needs.deploy-check.outputs.deploy-web }}
+    runs-on: ubuntu-latest
+    environment: Production
+    steps:
+      - run: |
+          echo "Production deployment"
+          echo '${{ toJSON(needs) }}'
+
+  deploy-production-api:
+    if: needs.deploy-production.outputs.deploy-api == 1
+    needs: [ deploy-production ]
+    runs-on: ubuntu-latest
+    environment: Production
+    steps:
+      - run: |
+          echo "Production API deployed"
+
+  deploy-production-web:
+    needs: [ deploy-production, deploy-production-api ]
+    if: needs.deploy-production.outputs.deploy-web == 1
+    runs-on: ubuntu-latest
+    environment: Production
+    steps:
+      - run: |
+          echo "Production WEB deployed"
