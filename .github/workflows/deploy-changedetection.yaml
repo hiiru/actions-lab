@@ -1,0 +1,132 @@
+name: "[DEPLOY] change detection"
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v0
+        with:
+          versionSpec: '5.x'
+          preferLatestVersion: true
+    outputs:
+      dockerTag: ${{ steps.gitversion.outputs.fullSemVer  }}
+
+  deploy-check:
+    needs: [ build ]
+    name: deployment check
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_CONTEXT: ${{ toJson(github) }}
+    steps:
+      - run: |
+          echo "change check to check what needs to be deployed"
+
+      - run: |
+          dotnet tool install dotnet-affected -g
+          echo ${{github.ref}}
+          echo ${{github.head_ref}}
+          echo ${{github.base_ref}}
+          echo "$GITHUB_CONTEXT"
+
+      - uses: actions/checkout@v4
+        with:
+          # We need to fetch all branches and commits so that Nx affected has a base to compare against.
+          fetch-depth: 0
+
+      - run: |
+          REF_HEAD=HEAD
+          case ${{github.event_name}} in
+            push | workflow_dispatch)
+            REF_BASE=$(gh run list -R ${{ github.repository }} -b ${{ github.ref_name }} -s success --json headSha --jq ".[0].headSha" -L 1 | head -n 1)
+            if [[ -z $REF_BASE ]]; then
+              echo "Warning: no base reference found, falling back to HEAD~1"
+              REF_BASE=HEAD~1
+            fi
+            ;;
+          
+            pull_request)
+            echo "PR handling not implemented yet"
+            echo "base and head reference for PR is available within github.event" 
+            exit 1
+            ;;
+          
+            *)
+            echo "ERROR: unsupported github event_name: ${{github.event_name}}"
+            exit 1
+            ;;
+          esac
+          
+          if [[ -z $REF_BASE ]]; then
+            echo "ERROR: github base reference not found"
+            exit 1
+          fi
+          echo "BASE: $REF_BASE"
+          bash scripts/deploy-changedetection.sh -r $REF_BASE -d
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
+  deploy-staging:
+    if: false
+    needs: [ deploy-check ]
+    runs-on: ubuntu-latest
+    environment: Staging
+    steps:
+      - run: |
+          echo "Staging deployment"
+
+  deploy-staging-web:
+    needs: [ deploy-staging ]
+    if: false
+    runs-on: ubuntu-latest
+    environment: Staging
+    steps:
+      - run: |
+          echo "Staging WEB deployed"
+
+  deploy-staging-api:
+    needs: [ deploy-staging-silo ]
+    runs-on: ubuntu-latest
+    environment: Staging
+    steps:
+      - run: |
+          echo "Staging API deployed"
+
+  deploy-production:
+    needs: [ deploy-check ]
+    # workaround for manual deployment on free plan (no approval)
+    if: ${{ github.run_attempt > 1 }}
+    runs-on: ubuntu-latest
+    environment: Production
+    steps:
+      - run: |
+          echo "Production deployment"
+
+  deploy-production-web:
+    needs: [ deploy-production ]
+    if: false
+    runs-on: ubuntu-latest
+    environment: Staging
+    steps:
+      - run: |
+          echo "Production WEB deployed"
+
+  deploy-production-api:
+    if: false
+    needs: [ deploy-production, deploy-production-silo ]
+    runs-on: ubuntu-latest
+    environment: Staging
+    steps:
+      - run: |
+          echo "Production API deployed"
