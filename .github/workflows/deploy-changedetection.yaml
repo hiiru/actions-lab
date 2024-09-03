@@ -94,10 +94,7 @@ jobs:
     environment: Staging
     steps:
       - run: |
-          echo "Staging deployment"
-          echo "outputs:"
-          echo "${{ needs.deploy-check.outputs.deploy-api }}"
-          echo "${{ needs.deploy-check.outputs.deploy-web }}"
+          echo "Staging deployment group"
 
   deploy-staging-api:
     needs: [ deploy-staging ]
