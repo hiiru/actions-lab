@@ -28,6 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       actions: read
+      contents: read
     env:
       GITHUB_CONTEXT: ${{ toJson(github) }}
     outputs:
