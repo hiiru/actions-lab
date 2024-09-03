@@ -74,7 +74,7 @@ check_changed_projects() {
         fi
         if [ ! -z "$GITHUB_STEP_SUMMARY" ];
         then
-          echo "Error: unable to check dotnet dependencies (no affected.json generated)" >> "$GITHUB_STEP_SUMMARY"
+          echo "No changes detected (no affected.js file generated)" >> "$GITHUB_STEP_SUMMARY"
         fi
         return 1
     fi
