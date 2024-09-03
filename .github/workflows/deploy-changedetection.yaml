@@ -47,6 +47,7 @@ jobs:
         name: "change detection for deploy"
         run: |
           echo "# Deploy change detection" >> "$GITHUB_STEP_SUMMARY"
+          gh run list -R ${{ github.repository }} -b ${{ github.ref_name }} 
           REF_HEAD=HEAD
           case ${{github.event_name}} in
             push | workflow_dispatch)
@@ -99,23 +100,23 @@ jobs:
 
   deploy-staging-api:
     needs: [ deploy-staging ]
-    if: true
+    if: needs.deploy-staging.outputs.deploy-api == 1
     runs-on: ubuntu-latest
     environment: Staging
     steps:
       - run: |
           echo "Staging API deployed"
-
-      - run: echo '${{ toJSON(needs) }}'
+          echo '${{ toJSON(needs) }}'
 
   deploy-staging-web:
     needs: [ deploy-staging, deploy-staging-api ]
-    if: needs.deploy-check.outputs.deploy-web == 1
+    if: needs.deploy-staging.outputs.deploy-web == 1
     runs-on: ubuntu-latest
     environment: Staging
     steps:
       - run: |
           echo "Staging WEB deployed"
+          echo '${{ toJSON(needs) }}'
 
 #  deploy-production:
 #    needs: [ deploy-check ]
