@@ -29,25 +29,14 @@ jobs:
     env:
       GITHUB_CONTEXT: ${{ toJson(github) }}
     outputs:
-      output1: ${{ steps.step1.outputs.test }}
-      output2: ${{ steps.step2.outputs.test }}
       deploy-api: ${{ steps.check.outputs.deploy_api }}
       deploy-web: ${{ steps.check.outputs.deploy_web }}
     steps:
       - run: |
           echo "change check to check what needs to be deployed"
 
-      - id: step1
-        run: echo "test=hello" >> "$GITHUB_OUTPUT"
-      - id: step2
-        run: echo "test=world" >> "$GITHUB_OUTPUT"
-
       - run: |
           dotnet tool install dotnet-affected -g
-          echo ${{github.ref}}
-          echo ${{github.head_ref}}
-          echo ${{github.base_ref}}
-          echo "$GITHUB_CONTEXT"
 
       - uses: actions/checkout@v4
         with:
@@ -57,12 +46,14 @@ jobs:
       - id: check
         name: "change detection for deploy"
         run: |
+          echo "# Deploy change detection" >> "$GITHUB_STEP_SUMMARY"
           REF_HEAD=HEAD
           case ${{github.event_name}} in
             push | workflow_dispatch)
             REF_BASE=$(gh run list -R ${{ github.repository }} -b ${{ github.ref_name }} -s success --json headSha --jq ".[0].headSha" -L 1 | head -n 1)
             if [[ -z $REF_BASE ]]; then
               echo "Warning: no base reference found, falling back to HEAD~1"
+              echo "Warning: no base reference found" >> "$GITHUB_STEP_SUMMARY"
               REF_BASE=HEAD~1
             fi
             ;;
@@ -70,82 +61,62 @@ jobs:
             pull_request)
             echo "PR handling not implemented yet"
             echo "base and head reference for PR is available within github.event" 
+            echo "Error: PR handling not implemented yet" >> "$GITHUB_STEP_SUMMARY"
             exit 1
             ;;
           
             *)
             echo "ERROR: unsupported github event_name: ${{github.event_name}}"
+            echo "ERROR: unsupported github event_name: ${{github.event_name}}" >> "$GITHUB_STEP_SUMMARY"
             exit 1
             ;;
           esac
           
           if [[ -z $REF_BASE ]]; then
             echo "ERROR: github base reference not found"
+            echo "ERROR: github base reference not found" >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
           echo "BASE: $REF_BASE"
           bash scripts/deploy-changedetection.sh -r $REF_BASE -d
-          echo test=moo >> "$GITHUB_OUTPUT"
-          echo test2=moo >> "$GITHUB_OUTPUT"
-          
-          {
-            echo "### Workflow variables"
-            echo "| Variable   | Value       |"
-            echo "| ---------- | ----------- |"
-            echo "| DEPLOY_API  | $DEPLOY_API  |"
-            echo "| DEPLOY_WEB | $DEPLOY_WEB |"
-            echo "| test  | $test  |"
-            echo "| test2 | $test2 |"
-          } >> $GITHUB_STEP_SUMMARY
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - run: |
-          echo "outputs:"
-          echo "DEPLOY_API: ${{ steps.check.outputs.DEPLOY_API }}"
-          echo "DEPLOY_WEB: ${{ steps.check.outputs.DEPLOY_WEB }}"
-          echo "DEPLOY_API: ${{ steps.check.outputs.deploy_api }}"
-          echo "DEPLOY_WEB: ${{ steps.check.outputs.deploy_web }}"
-
-      - run: echo '${{ toJSON(steps) }}'
 
 
   deploy-staging:
     needs: [ deploy-check ]
+    outputs:
+      deploy-api: ${{ needs.deploy-check.outputs.deploy-api }}
+      deploy-web: ${{ needs.deploy-check.outputs.deploy-web }}
     runs-on: ubuntu-latest
     environment: Staging
     steps:
       - run: |
           echo "Staging deployment"
-
-      - run: |
           echo "outputs:"
-          echo "${{ needs.deploy-check.outputs.output1 }}"
-          echo "${{ needs.deploy-check.outputs.output2 }}"
           echo "${{ needs.deploy-check.outputs.deploy-api }}"
           echo "${{ needs.deploy-check.outputs.deploy-web }}"
 
+  deploy-staging-api:
+    needs: [ deploy-staging ]
+    if: true
+    runs-on: ubuntu-latest
+    environment: Staging
+    steps:
+      - run: |
+          echo "Staging API deployed"
+
       - run: echo '${{ toJSON(needs) }}'
 
-#
-#  deploy-staging-api:
-#    needs: [ deploy-staging ]
-#    if: false
-#    runs-on: ubuntu-latest
-#    environment: Staging
-#    steps:
-#      - run: |
-#          echo "Staging API deployed"
-#
-#  deploy-staging-web:
-#    needs: [ deploy-staging, deploy-staging-api ]
-#    if: false
-#    runs-on: ubuntu-latest
-#    environment: Staging
-#    steps:
-#      - run: |
-#          echo "Staging WEB deployed"
-#
+  deploy-staging-web:
+    needs: [ deploy-staging, deploy-staging-api ]
+    if: needs.deploy-check.outputs.deploy-web == 1
+    runs-on: ubuntu-latest
+    environment: Staging
+    steps:
+      - run: |
+          echo "Staging WEB deployed"
+
 #  deploy-production:
 #    needs: [ deploy-check ]
 #    # workaround for manual deployment on free plan (no approval)

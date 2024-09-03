@@ -51,6 +51,11 @@ check_changed_host() {
         fi
         DEPLOY_API=1
         DEPLOY_WEB=1
+
+        if [ ! -z "$GITHUB_STEP_SUMMARY" ];
+        then
+          echo "check_changed_host: Host changed, deploying both" >> "$GITHUB_STEP_SUMMARY"
+        fi
         return 0
     else
     echo "check_changed_host: Error: unknown exit code from git diff: $retVal"
@@ -67,6 +72,10 @@ check_changed_projects() {
         if [ $DEBUG -eq 1 ]; then
             echo "check_changed_projects: no affected.json file generated"
         fi
+        if [ ! -z "$GITHUB_STEP_SUMMARY" ];
+        then
+          echo "Error: unable to check dotnet dependencies (no affected.json generated)" >> "$GITHUB_STEP_SUMMARY"
+        fi
         return 1
     fi
     local changed=0
@@ -79,12 +88,20 @@ check_changed_projects() {
             fi
             DEPLOY_API=1
             changed=1
+            if [ ! -z "$GITHUB_STEP_SUMMARY" ];
+            then
+              echo "* $a changed" >> "$GITHUB_STEP_SUMMARY"
+            fi
         elif [ $a == Web ]; then
             if [ $DEBUG -eq 1 ]; then
                 echo "check_changed_projects: Web changed"
             fi
             DEPLOY_WEB=1
             changed=1
+            if [ ! -z "$GITHUB_STEP_SUMMARY" ];
+            then
+              echo "* $a changed" >> "$GITHUB_STEP_SUMMARY"
+            fi
         fi
         if [[ $DEPLOY_API -eq 1 ]] && [[ DEPLOY_WEB -eq 1 ]]; then
             if [ $DEBUG -eq 1 ]; then
@@ -95,6 +112,12 @@ check_changed_projects() {
     done
     return $changed
 }
+
+
+if [ ! -z "$GITHUB_STEP_SUMMARY" ];
+then
+  echo "## script output" >> "$GITHUB_STEP_SUMMARY"
+fi
 
 check_changed_host || check_changed_projects
 checkReturnCode=$?
