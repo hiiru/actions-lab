@@ -85,7 +85,7 @@ jobs:
           fi
           echo "BASE: $REF_BASE"
           bash scripts/deploy-changedetection.sh -r $REF_BASE -d
-          echo test=moo >> $GITHUB_ENV
+          echo test=moo >> "$GITHUB_OUTPUT"
           echo test2=moo >> "$GITHUB_OUTPUT"
           
           {
@@ -124,6 +124,8 @@ jobs:
           echo "${{ needs.deploy-check.outputs.output2 }}"
           echo "${{ needs.deploy-check.outputs.deploy-api }}"
           echo "${{ needs.deploy-check.outputs.deploy-web }}"
+
+      - run: echo '${{ toJSON(needs) }}'
 
 #
 #  deploy-staging-api:

@@ -115,10 +115,20 @@ then
   echo "DEPLOY_WEB=$DEPLOY_WEB"
 else
   if [ $DEBUG -eq 1 ]; then
-    echo "writing to GITHUB_ENV -- $GITHUB_ENV"
+    echo "writing to GITHUB_OUTPUT -- $GITHUB_OUTPUT"
     echo "DEPLOY_API=$DEPLOY_API"
     echo "DEPLOY_WEB=$DEPLOY_WEB"
   fi
-  echo "DEPLOY_API=$DEPLOY_API" >> $GITHUB_ENV
-  echo "DEPLOY_WEB=$DEPLOY_WEB" >> $GITHUB_ENV
+  echo "DEPLOY_API=$DEPLOY_API" >> "$GITHUB_OUTPUT"
+  echo "DEPLOY_WEB=$DEPLOY_WEB" >> "$GITHUB_OUTPUT"
+  if [ ! -z "$GITHUB_STEP_SUMMARY" ];
+  then
+    {
+      echo "### deploy change detection variables"
+      echo "| Variable   | Value       |"
+      echo "| ---------- | ----------- |"
+      echo "| DEPLOY_API  | $DEPLOY_API  |"
+      echo "| DEPLOY_WEB | $DEPLOY_WEB |"
+    } >> "$GITHUB_STEP_SUMMARY"
+  fi
 fi
