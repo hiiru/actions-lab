@@ -28,9 +28,19 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GITHUB_CONTEXT: ${{ toJson(github) }}
+    outputs:
+      output1: ${{ steps.step1.outputs.test }}
+      output2: ${{ steps.step2.outputs.test }}
+      deploy-api: ${{ steps.check.outputs.deploy_api }}
+      deploy-web: ${{ steps.check.outputs.deploy_web }}
     steps:
       - run: |
           echo "change check to check what needs to be deployed"
+
+      - id: step1
+        run: echo "test=hello" >> "$GITHUB_OUTPUT"
+      - id: step2
+        run: echo "test=world" >> "$GITHUB_OUTPUT"
 
       - run: |
           dotnet tool install dotnet-affected -g
@@ -44,7 +54,9 @@ jobs:
           # We need to fetch all branches and commits so that Nx affected has a base to compare against.
           fetch-depth: 0
 
-      - run: |
+      - id: check
+        name: "change detection for deploy"
+        run: |
           REF_HEAD=HEAD
           case ${{github.event_name}} in
             push | workflow_dispatch)
@@ -73,15 +85,23 @@ jobs:
           fi
           echo "BASE: $REF_BASE"
           bash scripts/deploy-changedetection.sh -r $REF_BASE -d
+          
+          {
+            echo "### Workflow variables"
+            echo "| Variable   | Value       |"
+            echo "| ---------- | ----------- |"
+            echo "| DEPLOY_API  | $DEPLOY_API  |"
+            echo "| DEPLOY_WEB | $DEPLOY_WEB |"
+          } >> $GITHUB_STEP_SUMMARY
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - run: |
           echo "outputs:"
-          echo "DEPLOY_API: ${{ steps.deploy-check.outputs.DEPLOY_API }}"
-          echo "DEPLOY_WEB: ${{ steps.deploy-check.outputs.DEPLOY_WEB }}"
-          echo "DEPLOY_API: ${{ steps.deploy-check.outputs.deploy_api }}"
-          echo "DEPLOY_WEB: ${{ steps.deploy-check.outputs.deploy_web }}"
+          echo "DEPLOY_API: ${{ steps.check.outputs.DEPLOY_API }}"
+          echo "DEPLOY_WEB: ${{ steps.check.outputs.DEPLOY_WEB }}"
+          echo "DEPLOY_API: ${{ steps.check.outputs.deploy_api }}"
+          echo "DEPLOY_WEB: ${{ steps.check.outputs.deploy_web }}"
 
 
   deploy-staging:
@@ -94,8 +114,8 @@ jobs:
 
       - run: |
           echo "outputs:"
-          echo "${{ steps.deploy-check.outputs.DEPLOY_API }}"
-          echo "${{ steps.deploy-check.outputs.DEPLOY_WEB }}"
+          echo "${{ needs.deploy-check.outputs.DEPLOY_API }}"
+          echo "${{ needs.deploy-check.outputs.DEPLOY_WEB }}"
 
 #
 #  deploy-staging-api:
