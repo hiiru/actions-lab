@@ -123,7 +123,6 @@ jobs:
     needs: [ deploy-check ]
     # workaround for manual deployment on free plan (no approval)
     if: ${{ github.run_attempt > 1 && (needs.deploy-check.outputs.deploy-api == 1 || needs.deploy-check.outputs.deploy-web == 1) }}
-    #if: ${{ github.run_attempt > 1 }}
     outputs:
       deploy-api: ${{ needs.deploy-check.outputs.deploy-api }}
       deploy-web: ${{ needs.deploy-check.outputs.deploy-web }}

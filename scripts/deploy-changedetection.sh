@@ -130,6 +130,10 @@ if [[ $DEPLOY_API -eq 0 ]] && [[ DEPLOY_WEB -eq 0 ]]; then
     if [ $DEBUG -eq 1 ]; then
         echo "no changes detected"
     fi
+    if [ ! -z "$GITHUB_STEP_SUMMARY" ];
+    then
+      echo "No changes detected" >> "$GITHUB_STEP_SUMMARY"
+    fi
 fi
 
 if [ -z ${GITHUB_ENV+x} ];
@@ -147,7 +151,6 @@ else
   if [ ! -z "$GITHUB_STEP_SUMMARY" ];
   then
     {
-      echo "### deploy change detection variables"
       echo "| Variable   | Value       |"
       echo "| ---------- | ----------- |"
       echo "| DEPLOY_API  | $DEPLOY_API  |"
