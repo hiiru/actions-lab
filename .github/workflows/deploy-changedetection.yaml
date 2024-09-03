@@ -1,4 +1,5 @@
 name: "[DEPLOY] change detection"
+permissions: read-all
 
 on:
   push:
@@ -6,24 +7,24 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Install GitVersion
-        uses: gittools/actions/gitversion/setup@v0
-        with:
-          versionSpec: '5.x'
-          preferLatestVersion: true
-    outputs:
-      dockerTag: ${{ steps.gitversion.outputs.fullSemVer  }}
+#  build:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v4
+#        with:
+#          fetch-depth: 0
+#
+#      - name: Install GitVersion
+#        uses: gittools/actions/gitversion/setup@v0
+#        with:
+#          versionSpec: '5.x'
+#          preferLatestVersion: true
+#    outputs:
+#      dockerTag: ${{ steps.gitversion.outputs.fullSemVer  }}
 
   deploy-check:
-    needs: [ build ]
+#    needs: [ build ]
     name: deployment check
     runs-on: ubuntu-latest
     env:
