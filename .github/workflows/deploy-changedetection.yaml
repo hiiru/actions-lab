@@ -1,5 +1,4 @@
 name: "[DEPLOY] change detection"
-permissions: read-all
 
 on:
   push:
@@ -27,6 +26,8 @@ jobs:
 #    needs: [ build ]
     name: deployment check
     runs-on: ubuntu-latest
+    permissions:
+      actions: read
     env:
       GITHUB_CONTEXT: ${{ toJson(github) }}
     outputs:
@@ -48,11 +49,14 @@ jobs:
         name: "change detection for deploy"
         run: |
           echo "# Deploy change detection" >> "$GITHUB_STEP_SUMMARY"
-          gh run list -R ${{ github.repository }} -b ${{ github.ref_name }} 
           REF_HEAD=HEAD
           case ${{github.event_name}} in
             push | workflow_dispatch)
-            REF_BASE=$(gh run list -R ${{ github.repository }} -b ${{ github.ref_name }} -s success --json headSha --jq ".[0].headSha" -L 1 | head -n 1)
+            REF_BASE=$(gh run list -R ${{ github.repository }} -b ${{ github.ref_name }} -s success --json headSha --jq ".[0].headSha" -L 1 | head -n 1)  
+            if [ $? -ne 0 ]; then
+              echo "Error: github api call failed" >> "$GITHUB_STEP_SUMMARY"
+              exit 1
+            fi
             if [[ -z $REF_BASE ]]; then
               echo "Warning: no base reference found, falling back to HEAD~1"
               echo "Warning: no base reference found" >> "$GITHUB_STEP_SUMMARY"
