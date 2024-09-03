@@ -144,7 +144,7 @@ jobs:
 
   deploy-production-web:
     needs: [ deploy-production, deploy-production-api ]
-    if: needs.deploy-production.outputs.deploy-web == 1
+    if: always() && needs.deploy-production.outputs.deploy-web == 1
     runs-on: ubuntu-latest
     environment: Production
     steps:
