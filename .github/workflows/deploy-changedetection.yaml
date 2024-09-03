@@ -96,7 +96,7 @@ jobs:
           echo "Staging WEB deployed"
 
   deploy-staging-api:
-    needs: [ deploy-staging-silo ]
+    needs: [ deploy-staging, deploy-staging-web ]
     runs-on: ubuntu-latest
     environment: Staging
     steps:
@@ -124,7 +124,7 @@ jobs:
 
   deploy-production-api:
     if: false
-    needs: [ deploy-production, deploy-production-silo ]
+    needs: [ deploy-production, deploy-production-web ]
     runs-on: ubuntu-latest
     environment: Staging
     steps:
