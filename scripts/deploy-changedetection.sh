@@ -15,10 +15,11 @@ usage() {
     exit 1;
 }
 
-while getopts r:hd flag
+while getopts r:e:hd flag
 do
     case "${flag}" in
         r) GIT_REFERENCE=${OPTARG};;
+        e) OUTPUT_FILE=${OPTARG};;
         h) usage ;;
         d) DEBUG=1 && echo "DEBUG output enabled" ;;
         *) usage ;;
@@ -107,10 +108,13 @@ if [[ $DEPLOY_API -eq 0 ]] && [[ DEPLOY_WEB -eq 0 ]]; then
     if [ $DEBUG -eq 1 ]; then
         echo "no changes detected"
     fi
-    exit 0
 fi
 
-echo "----------"
-echo build status:
-echo API: $DEPLOY_API
-echo WEB: $DEPLOY_WEB
+if [ -z ${GIT_REFERENCE+x} ];
+then
+  echo "DEPLOY_API=$DEPLOY_API"
+  echo "DEPLOY_WEB=$DEPLOY_WEB"
+else
+  echo "DEPLOY_API=$DEPLOY_API" >> $OUTPUT_FILE
+  echo "DEPLOY_WEB=$DEPLOY_WEB" >> $OUTPUT_FILE
+fi

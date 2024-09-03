@@ -76,9 +76,13 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - run: |
+          echo "outputs:"
+          echo "${{ steps.deploy-check.outputs.DEPLOY_API }}"
+          echo "${{ steps.deploy-check.outputs.DEPLOY_WEB }}"
+
 
   deploy-staging:
-    if: false
     needs: [ deploy-check ]
     runs-on: ubuntu-latest
     environment: Staging
@@ -86,22 +90,29 @@ jobs:
       - run: |
           echo "Staging deployment"
 
-  deploy-staging-web:
+      - run: |
+          echo "outputs:"
+          echo "${{ steps.deploy-check.outputs.DEPLOY_API }}"
+          echo "${{ steps.deploy-check.outputs.DEPLOY_WEB }}"
+
+
+  deploy-staging-api:
     needs: [ deploy-staging ]
     if: false
     runs-on: ubuntu-latest
     environment: Staging
     steps:
       - run: |
-          echo "Staging WEB deployed"
+          echo "Staging API deployed"
 
-  deploy-staging-api:
-    needs: [ deploy-staging, deploy-staging-web ]
+  deploy-staging-web:
+    needs: [ deploy-staging, deploy-staging-api ]
+    if: false
     runs-on: ubuntu-latest
     environment: Staging
     steps:
       - run: |
-          echo "Staging API deployed"
+          echo "Staging WEB deployed"
 
   deploy-production:
     needs: [ deploy-check ]
@@ -113,20 +124,20 @@ jobs:
       - run: |
           echo "Production deployment"
 
-  deploy-production-web:
+  deploy-production-api:
+    if: false
     needs: [ deploy-production ]
+    runs-on: ubuntu-latest
+    environment: Staging
+    steps:
+      - run: |
+          echo "Production API deployed"
+
+  deploy-production-web:
+    needs: [ deploy-production, deploy-production-api ]
     if: false
     runs-on: ubuntu-latest
     environment: Staging
     steps:
       - run: |
           echo "Production WEB deployed"
-
-  deploy-production-api:
-    if: false
-    needs: [ deploy-production, deploy-production-web ]
-    runs-on: ubuntu-latest
-    environment: Staging
-    steps:
-      - run: |
-          echo "Production API deployed"
