@@ -78,8 +78,10 @@ jobs:
 
       - run: |
           echo "outputs:"
-          echo "${{ steps.deploy-check.outputs.DEPLOY_API }}"
-          echo "${{ steps.deploy-check.outputs.DEPLOY_WEB }}"
+          echo "DEPLOY_API: ${{ steps.deploy-check.outputs.DEPLOY_API }}"
+          echo "DEPLOY_WEB: ${{ steps.deploy-check.outputs.DEPLOY_WEB }}"
+          echo "DEPLOY_API: ${{ steps.deploy-check.outputs.deploy_api }}"
+          echo "DEPLOY_WEB: ${{ steps.deploy-check.outputs.deploy_web }}"
 
 
   deploy-staging:
@@ -95,49 +97,49 @@ jobs:
           echo "${{ steps.deploy-check.outputs.DEPLOY_API }}"
           echo "${{ steps.deploy-check.outputs.DEPLOY_WEB }}"
 
-
-  deploy-staging-api:
-    needs: [ deploy-staging ]
-    if: false
-    runs-on: ubuntu-latest
-    environment: Staging
-    steps:
-      - run: |
-          echo "Staging API deployed"
-
-  deploy-staging-web:
-    needs: [ deploy-staging, deploy-staging-api ]
-    if: false
-    runs-on: ubuntu-latest
-    environment: Staging
-    steps:
-      - run: |
-          echo "Staging WEB deployed"
-
-  deploy-production:
-    needs: [ deploy-check ]
-    # workaround for manual deployment on free plan (no approval)
-    if: ${{ github.run_attempt > 1 }}
-    runs-on: ubuntu-latest
-    environment: Production
-    steps:
-      - run: |
-          echo "Production deployment"
-
-  deploy-production-api:
-    if: false
-    needs: [ deploy-production ]
-    runs-on: ubuntu-latest
-    environment: Staging
-    steps:
-      - run: |
-          echo "Production API deployed"
-
-  deploy-production-web:
-    needs: [ deploy-production, deploy-production-api ]
-    if: false
-    runs-on: ubuntu-latest
-    environment: Staging
-    steps:
-      - run: |
-          echo "Production WEB deployed"
+#
+#  deploy-staging-api:
+#    needs: [ deploy-staging ]
+#    if: false
+#    runs-on: ubuntu-latest
+#    environment: Staging
+#    steps:
+#      - run: |
+#          echo "Staging API deployed"
+#
+#  deploy-staging-web:
+#    needs: [ deploy-staging, deploy-staging-api ]
+#    if: false
+#    runs-on: ubuntu-latest
+#    environment: Staging
+#    steps:
+#      - run: |
+#          echo "Staging WEB deployed"
+#
+#  deploy-production:
+#    needs: [ deploy-check ]
+#    # workaround for manual deployment on free plan (no approval)
+#    if: ${{ github.run_attempt > 1 }}
+#    runs-on: ubuntu-latest
+#    environment: Production
+#    steps:
+#      - run: |
+#          echo "Production deployment"
+#
+#  deploy-production-api:
+#    if: false
+#    needs: [ deploy-production ]
+#    runs-on: ubuntu-latest
+#    environment: Staging
+#    steps:
+#      - run: |
+#          echo "Production API deployed"
+#
+#  deploy-production-web:
+#    needs: [ deploy-production, deploy-production-api ]
+#    if: false
+#    runs-on: ubuntu-latest
+#    environment: Staging
+#    steps:
+#      - run: |
+#          echo "Production WEB deployed"

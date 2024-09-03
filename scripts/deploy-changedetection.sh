@@ -15,11 +15,10 @@ usage() {
     exit 1;
 }
 
-while getopts r:e:hd flag
+while getopts r:hd flag
 do
     case "${flag}" in
         r) GIT_REFERENCE=${OPTARG};;
-        e) OUTPUT_FILE=${OPTARG};;
         h) usage ;;
         d) DEBUG=1 && echo "DEBUG output enabled" ;;
         *) usage ;;
@@ -110,11 +109,16 @@ if [[ $DEPLOY_API -eq 0 ]] && [[ DEPLOY_WEB -eq 0 ]]; then
     fi
 fi
 
-if [ -z ${OUTPUT_FILE+x} ];
+if [ -z ${GITHUB_ENV+x} ];
 then
   echo "DEPLOY_API=$DEPLOY_API"
   echo "DEPLOY_WEB=$DEPLOY_WEB"
 else
-  echo "DEPLOY_API=$DEPLOY_API" >> "$OUTPUT_FILE"
-  echo "DEPLOY_WEB=$DEPLOY_WEB" >> "$OUTPUT_FILE"
+  if [ $DEBUG -eq 1 ]; then
+    echo "writing to GITHUB_ENV -- $GITHUB_ENV"
+    echo "DEPLOY_API=$DEPLOY_API"
+    echo "DEPLOY_WEB=$DEPLOY_WEB"
+  fi
+  echo "DEPLOY_API=$DEPLOY_API" >> "$GITHUB_ENV"
+  echo "DEPLOY_WEB=$DEPLOY_WEB" >> "$GITHUB_ENV"
 fi
